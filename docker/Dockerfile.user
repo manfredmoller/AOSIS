@@ -25,5 +25,9 @@ RUN echo "source /opt/ros/humble/setup.bash" >> /home/admin/.bashrc && \
     echo "source /workspaces/isaac_ros-dev/install/setup.bash 2>/dev/null || true" >> /home/admin/.bashrc && \
     echo "export ROS_DOMAIN_ID=0" >> /home/admin/.bashrc
 
+# Switch to admin user before setting git config
 USER admin
+RUN git config --global user.email "manfredsilicon@icloud.com" && \
+    git config --global user.name "manfredmoller"
+
 WORKDIR /workspaces/isaac_ros-dev
