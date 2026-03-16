@@ -1,0 +1,41 @@
+/**:
+  ros__parameters:
+    # --- Stream enables ---
+    enable_color: true
+    enable_depth: true
+    enable_infra1: true
+    enable_infra2: true
+    enable_gyro: false
+    enable_accel: false
+
+    # --- Depth module ---
+    depth_width: 848
+    depth_height: 480
+    depth_fps: 30
+    depth_format: "Z16"
+
+    # --- Infrared stereo ---
+    infra_width: 848
+    infra_height: 480
+    infra_fps: 30
+    infra_format: "Y8"
+
+    # --- Color (available but not primary for tracking) ---
+    color_width: 848
+    color_height: 480
+    color_fps: 30
+    color_format: "RGB8"
+
+    # --- IR emitter ---
+    # 0=off, 1=on, 2=auto
+    # Keep on for depth quality at close range (<500mm wand tip distance)
+    emitter_enabled: 1
+
+    # --- Depth quality ---
+    spatial_filter.enable: true
+    temporal_filter.enable: true
+    decimation_filter.enable: false
+
+    # --- Sync ---
+    sync_mode: false
+    unite_imu_method: 0
