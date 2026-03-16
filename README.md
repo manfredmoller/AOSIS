@@ -116,4 +116,4 @@ ros2 launch realsense2_camera rs_launch.py \
 
 ## Author
 
-Manfred — Computer Engineering, Senior
+Manfred
