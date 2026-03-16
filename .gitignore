@@ -18,3 +18,6 @@ __pycache__/
 
 # Isaac ROS container config
 .isaac_ros_common-config
+src/isaac_ros_common/
+src/realsense-ros/
+src/isaac_ros_argus_camera/
