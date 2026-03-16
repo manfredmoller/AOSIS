@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y curl gnupg2 && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 
 # Install Vision, Diagnostics, and Control tools
-# Note: RealSense SDK is already installed from the base realsense-image
 RUN apt-get update && apt-get install -y \
     usbutils \
     nano \
@@ -15,3 +14,16 @@ RUN apt-get update && apt-get install -y \
     ros-humble-realsense2-camera \
     ros-humble-moveit \
     && rm -rf /var/lib/apt/lists/*
+
+# Create admin user with correct group memberships for GPU and device access
+RUN useradd -m -s /bin/bash admin && \
+    usermod -aG sudo,video,render,dialout,plugdev admin && \
+    echo "admin ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Auto-source ROS and workspace on every shell
+RUN echo "source /opt/ros/humble/setup.bash" >> /home/admin/.bashrc && \
+    echo "source /workspaces/isaac_ros-dev/install/setup.bash 2>/dev/null || true" >> /home/admin/.bashrc && \
+    echo "export ROS_DOMAIN_ID=0" >> /home/admin/.bashrc
+
+USER admin
+WORKDIR /workspaces/isaac_ros-dev
