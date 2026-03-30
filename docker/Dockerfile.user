@@ -1,31 +1,24 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
-# Fix the GPG key error inside the build process
 RUN apt-get update && apt-get install -y curl gnupg2 && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
 
-# Install Vision, Diagnostics, and Control tools
 RUN apt-get update && apt-get install -y \
-    usbutils \
-    nano \
-    htop \
-    python3-opencv \
-    ros-humble-realsense2-camera \
-    ros-humble-moveit \
+    usbutils nano htop python3-opencv \
+    ros-humble-realsense2-camera ros-humble-moveit \
     && rm -rf /var/lib/apt/lists/*
 
-# Create admin user with correct group memberships for GPU and device access
 RUN useradd -m -s /bin/bash admin && \
     usermod -aG sudo,video,render,dialout,plugdev admin && \
     echo "admin ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-# Auto-source ROS and workspace on every shell
 RUN echo "source /opt/ros/humble/setup.bash" >> /home/admin/.bashrc && \
     echo "source /workspaces/isaac_ros-dev/install/setup.bash 2>/dev/null || true" >> /home/admin/.bashrc && \
-    echo "export ROS_DOMAIN_ID=0" >> /home/admin/.bashrc
+    echo "export ROS_DOMAIN_ID=0" >> /home/admin/.bashrc && \
+    echo "alias realsense_demo='ros2 launch /workspaces/isaac_ros-dev/src/aosis/launch/aosis_demo.launch.py'" >> /home/admin/.bashrc && \
+    echo "alias aosis_attach='docker exec -it isaac_ros_dev-aarch64-container bash'" >> /home/admin/.bashrc
 
-# Switch to admin user before setting git config
 USER admin
 RUN git config --global user.email "manfredsilicon@icloud.com" && \
     git config --global user.name "manfredmoller"

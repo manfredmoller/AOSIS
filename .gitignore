@@ -21,3 +21,7 @@ __pycache__/
 src/isaac_ros_common/
 src/realsense-ros/
 src/isaac_ros_argus_camera/
+# Generated frame tree files
+*.gv
+# VS Code workspace
+*.code-workspace
