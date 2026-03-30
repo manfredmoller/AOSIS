@@ -25,3 +25,5 @@ src/isaac_ros_argus_camera/
 *.gv
 # VS Code workspace
 *.code-workspace
+# PlatformIO build artifacts
+firmware/.pio/
