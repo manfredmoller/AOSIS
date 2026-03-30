@@ -44,7 +44,7 @@ A three-axis motion stage (NEMA 23 steppers, TMC5160T Pro drivers, ball-screw li
 | Container base | `nvcr.io/nvidia/isaac/ros:aarch64-ros2_humble` |
 | ROS 2 | Humble |
 | Isaac ROS | NITROS zero-copy GPU transport |
-| Micro-ROS | Humble, serial + Ethernet UDP transport |
+| Micro-ROS | Humble, Ethernet UDP transport (192.168.10.0/24) |
 | Teensy firmware | PlatformIO + micro_ros_platformio |
 | Inference | TensorRT, ONNX, DLA |
 | realsense-ros | 4.55.1 |
@@ -156,8 +156,8 @@ ros2 launch aosis realsense_bringup.launch.py
 |-----------|--------|
 | Isaac ROS container — JetPack 6 | ✅ Verified |
 | RealSense D435i — IR stereo + depth at 30fps | ✅ Verified |
-| Teensy 4.1 Micro-ROS node — 50Hz joint states over USB | ✅ Verified |
-| Micro-ROS Ethernet transport | 🔄 In progress |
+| Teensy 4.1 Micro-ROS node — 50Hz joint states over Ethernet UDP | ✅ Verified |
+| Micro-ROS Ethernet transport — 50Hz UDP, 192.168.10.0/24 | ✅ Verified |
 | TMC5160T Pro wiring and sensorless homing | 🔄 In progress |
 | URDF — three-axis gantry tf2 tree | 🔄 In progress |
 | RealSense D435i — Isaac ROS NITROS integration | ⬜ Planned |
