@@ -29,12 +29,12 @@ echo "Configuring shell environment..."
 if ! grep -q "source /opt/ros/humble/setup.bash" ~/.bashrc; then
     echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
     echo "source /workspaces/isaac_ros-dev/install/setup.bash" >> ~/.bashrc
-    echo "export ROS_DOMAIN_ID=1" >> ~/.bashrc
+    echo "export ROS_DOMAIN_ID=0" >> ~/.bashrc
 fi
 
 # 4. Permissions
 # Ensure the admin user owns the workspace folders
-sudo chown -R admin:admin /workspaces/isaac_ros-dev/src/inspection_station
+# inspection_station removed - see aosis_bringup
 
 echo "================================================="
 echo "AOSIS Setup Complete!"
