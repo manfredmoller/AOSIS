@@ -1,61 +1,100 @@
-# AOSIS — Autonomous Optical Servoing & Inspection Station
+# AOSIS — Autonomous Optical Servoing and Inspection Station
 
-A real-time robotic inspection system built on the NVIDIA Jetson Orin AGX using Isaac ROS NITROS for zero-copy GPU memory transport and TensorRT for edge AI inference.
+A real-time robotic inspection system built on the NVIDIA Jetson Orin AGX using Isaac ROS NITROS for zero-copy GPU memory transport and TensorRT for edge AI inference. AOSIS autonomously tracks a soldering iron and maintains a calibrated standoff distance using a dual-camera perception hierarchy and a three-axis ball-screw gantry.
+
+---
 
 ## System Overview
 
-AOSIS tracks high-heat effectors (soldering wands) using a dual-camera "Search and Magnify" hierarchy:
-- **Intel RealSense D435i** — wide-field IR stereo + depth for 3D wand tip localization
-- **Mokose UC70** — 4K optical zoom camera for stabilized close-range inspection
+AOSIS uses a layered perception architecture to track high-heat effectors during active soldering work:
 
-A three-axis motion stage (NEMA 23 steppers + TMC5160T Pro drivers) is controlled via a Teensy 4.1 running micro-ROS, closing the servo loop from camera detection to physical motion.
+- **Intel RealSense D435i** — wide-field IR stereo depth camera for 3D wand tip localization and spatial awareness
+- **Mokose UC70 4K** — close-range inspection camera for high-resolution surface observation
+
+Perception runs on a three-tier inference stack:
+
+| Tier | Model | Hardware | Rate | Role |
+|------|-------|----------|------|------|
+| Fast | NanoOWL + Kalman filter | DLA | ~60 Hz | Real-time tracking |
+| Mid | NanoOWL re-detection | GPU | 20–30 Hz | Drift correction |
+| Slow | Quantized LLaVA | GPU | 0.5–2 Hz | Semantic scene understanding |
+
+A three-axis motion stage (NEMA 23 steppers, TMC5160T Pro drivers, ball-screw linear rails) is controlled by a Teensy 4.1 running Micro-ROS, closing the servo loop from camera detection to physical gantry motion.
+
+---
 
 ## Hardware
 
 | Component | Details |
-|---|---|
+|-----------|---------|
 | Compute | NVIDIA Jetson Orin AGX 64GB, JetPack 6, MAXN mode |
-| Tracking Camera | Intel RealSense D435i, firmware 5.13.0.50 |
-| Inspection Camera | Mokose UC70 4K |
-| Motion Controller | Teensy 4.1 (micro-ROS) |
-| Stepper Drivers | TMC5160T Pro x3 |
-| Motors | NEMA 23 stepper motors |
+| Tracking camera | Intel RealSense D435i, firmware 5.13.0.50 |
+| Inspection camera | Mokose UC70 4K |
+| Motion controller | Teensy 4.1 (Micro-ROS over Ethernet) |
+| Stepper drivers | BigTreeTech TMC5160T Pro x3 (StallGuard4 sensorless homing) |
+| Motors | NEMA 23 stepper motors, 1.8° step angle, 3A/phase |
+| Motion stage | Three-axis ball-screw linear rails |
+
+---
 
 ## Software Stack
 
-| Component | Version |
-|---|---|
-| Isaac ROS | NITROS, Isaac ROS Humble |
+| Component | Details |
+|-----------|---------|
+| Container base | `nvcr.io/nvidia/isaac/ros:aarch64-ros2_humble` |
 | ROS 2 | Humble |
+| Isaac ROS | NITROS zero-copy GPU transport |
+| Micro-ROS | Humble, serial + Ethernet UDP transport |
+| Teensy firmware | PlatformIO + micro_ros_platformio |
+| Inference | TensorRT, ONNX, DLA |
 | realsense-ros | 4.55.1 |
 | librealsense | 2.56.4 |
-| Container base | nvcr.io/nvidia/isaac/ros:aarch64-ros2_humble |
+
+---
 
 ## Repository Structure
 ```
 AOSIS/
+├── firmware/                   # Teensy 4.1 Micro-ROS firmware (PlatformIO)
+│   ├── src/main.cpp            # Motion controller node
+│   └── platformio.ini          # Build config (Humble, serial transport)
 ├── src/
 │   ├── aosis/                  # Primary ROS 2 package
-│   │   ├── config/             # Sensor and pipeline parameters
+│   │   ├── config/             # Sensor parameters and RViz configs
 │   │   └── launch/             # Launch files
-│   └── microscope_bringup/     # Robot URDF and state publisher
+│   └── aosis_bringup/          # Robot description and state publisher
+│       ├── urdf/aosis.urdf     # Three-axis gantry URDF
+│       └── launch/             # Bringup launch files
 ├── docker/
-│   └── Dockerfile.user         # Container customization layer
+│   └── Dockerfile.user         # Isaac ROS container customization layer
 ├── scripts/
-│   └── setup.sh                # One-shot container environment setup
-├── .env.template               # NGC credentials template
+│   ├── aosis_start.sh          # Launch Isaac ROS development container
+│   └── setup.sh                # One-shot workspace environment setup
+├── .env.template               # NGC credentials template (never committed)
 └── .gitignore
 ```
 
-## Setup & Reproduction
+---
+
+## ROS Topics
+
+| Topic | Type | Direction | Rate |
+|-------|------|-----------|------|
+| `/joint_states` | `sensor_msgs/JointState` | Teensy → Orin | 50 Hz |
+| `/aosis/cmd_vel` | `std_msgs/Float32MultiArray` | Orin → Teensy | on demand |
+
+---
+
+## Setup and Reproduction
 
 ### Prerequisites
-- Jetson Orin AGX (or compatible Jetson) with JetPack 6
-- NVIDIA NGC account (free) — [ngc.nvidia.com](https://ngc.nvidia.com)
-- Docker with NGC credentials configured
-- Intel RealSense D435i on USB 3.1+ port
 
-### 1. Clone the repo
+- NVIDIA Jetson Orin AGX (or compatible Jetson) with JetPack 6
+- NVIDIA NGC account — [ngc.nvidia.com](https://ngc.nvidia.com)
+- Docker configured with NGC credentials
+- Intel RealSense D435i connected to USB 3.1 or faster
+
+### 1. Clone the repository
 ```bash
 git clone https://github.com/manfredmoller/AOSIS.git
 cd AOSIS
@@ -64,56 +103,71 @@ cd AOSIS
 ### 2. Configure NGC credentials
 ```bash
 cp .env.template .env
-# Edit .env and add your NGC API key
+# Add your NGC API key to .env
 docker login nvcr.io
 # Username: $oauthtoken
 # Password: <your NGC API key>
 ```
 
-### 3. Set up Isaac ROS workspace
+### 3. Clone Isaac ROS dependencies
 ```bash
-mkdir -p ~/workspaces/isaac_ros-dev/src
-cp -r src/* ~/workspaces/isaac_ros-dev/src/
-```
-
-### 4. Clone Isaac ROS dependencies
-```bash
-cd ~/workspaces/isaac_ros-dev/src
+mkdir -p ~/workspaces/isaac_ros-dev/src && cd ~/workspaces/isaac_ros-dev/src
 git clone https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
-git clone https://github.com/IntelRealSense/realsense-ros.git -b 4.51.1
+git clone https://github.com/IntelRealSense/realsense-ros.git -b 4.55.1
+cp -r /path/to/AOSIS/src/* .
 ```
 
-### 5. Configure and launch container
+### 4. Launch the Isaac ROS container
 ```bash
 cd ~/workspaces/isaac_ros-dev/src/isaac_ros_common/scripts
 echo "CONFIG_IMAGE_KEY=ros2_humble.realsense" > .isaac_ros_common-config
 ./run_dev.sh
 ```
 
-### 6. Build workspace
+### 5. Build the workspace
 ```bash
 cd /workspaces/isaac_ros-dev
-colcon build --packages-select realsense2_camera_msgs realsense2_camera realsense2_description \
-  --cmake-args -DCMAKE_BUILD_TYPE=Release
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 ```
 
-### 7. Launch RealSense
+### 6. Flash Teensy firmware
 ```bash
-ros2 launch realsense2_camera rs_launch.py \
-  --ros-args --params-file src/aosis/config/realsense_aosis.yaml
+cd /path/to/AOSIS/firmware
+pio run --target upload
 ```
 
-## Current Status
+### 7. Start the Micro-ROS agent
+```bash
+source /workspaces/isaac_ros-dev/install/setup.bash
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0 -b 115200
+```
 
-- [x] Isaac ROS container bringup on JetPack 6
-- [x] RealSense D435i — IR stereo + depth streams verified at 30fps
-- [ ] NITROS graph wiring to TensorRT inference pipeline
-- [ ] Soldering wand tip detection model
-- [ ] micro-ROS Teensy 4.1 node
-- [ ] Closed-loop servo control via TMC5160T Pro
-- [ ] Mokose UC70 integration
+### 8. Launch RealSense
+```bash
+ros2 launch aosis realsense_bringup.launch.py
+```
 
-## Author
+---
 
-Manfred
+## Build Status
+
+| Subsystem | Status |
+|-----------|--------|
+| Isaac ROS container — JetPack 6 | ✅ Verified |
+| RealSense D435i — IR stereo + depth at 30fps | ✅ Verified |
+| Teensy 4.1 Micro-ROS node — 50Hz joint states over USB | ✅ Verified |
+| Micro-ROS Ethernet transport | 🔄 In progress |
+| TMC5160T Pro wiring and sensorless homing | 🔄 In progress |
+| URDF — three-axis gantry tf2 tree | 🔄 In progress |
+| RealSense D435i — Isaac ROS NITROS integration | ⬜ Planned |
+| NanoOWL soldering iron tracking pipeline | ⬜ Planned |
+| Mokose UC70 — NITROS dual-camera pipeline | ⬜ Planned |
+| Closed-loop gantry servo control | ⬜ Planned |
+| LLaVA semantic scene understanding | ⬜ Planned |
+
+---
+
+## Academic Context
+
+AOSIS is a capstone project for ETI 4480 — Applied Robotics, Spring 2026. The system architecture is designed to support future AI capability expansion without structural changes, using a tiered inference model that separates real-time control from semantic reasoning.
