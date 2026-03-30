@@ -16,11 +16,8 @@ RUN useradd -m -s /bin/bash admin && \
 RUN echo "source /opt/ros/humble/setup.bash" >> /home/admin/.bashrc && \
     echo "source /workspaces/isaac_ros-dev/install/setup.bash 2>/dev/null || true" >> /home/admin/.bashrc && \
     echo "export ROS_DOMAIN_ID=0" >> /home/admin/.bashrc && \
-    echo "alias realsense_demo='ros2 launch /workspaces/isaac_ros-dev/src/aosis/launch/aosis_demo.launch.py'" >> /home/admin/.bashrc && \
+    echo "alias realsense_bringup='ros2 launch /workspaces/isaac_ros-dev/src/aosis/launch/realsense_bringup.launch.py'" >> /home/admin/.bashrc && \
     echo "alias aosis_attach='docker exec -it isaac_ros_dev-aarch64-container bash'" >> /home/admin/.bashrc
 
 USER admin
-RUN git config --global user.email "manfredsilicon@icloud.com" && \
-    git config --global user.name "manfredmoller"
-
 WORKDIR /workspaces/isaac_ros-dev

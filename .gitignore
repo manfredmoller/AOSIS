@@ -27,3 +27,7 @@ src/isaac_ros_argus_camera/
 *.code-workspace
 # PlatformIO build artifacts
 firmware/.pio/
+# Binary firmware files
+src/aosis/firmware/
+# Micro-ROS built artifacts
+src/microros/
