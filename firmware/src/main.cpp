@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <NativeEthernet.h>
+#include <NativeEthernetUdp.h>
 #include <micro_ros_platformio.h>
 #include <rcl/rcl.h>
 #include <rclc/rclc.h>
@@ -6,6 +8,48 @@
 #include <sensor_msgs/msg/joint_state.h>
 #include <std_msgs/msg/float32_multi_array.h>
 
+// Network config
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+IPAddress teensy_ip(192, 168, 10, 2);
+IPAddress agent_ip(192, 168, 10, 1);
+uint16_t agent_port = 8888;
+uint16_t teensy_port = 9999;
+
+EthernetUDP udp;
+
+// Micro-ROS transport callbacks
+bool ethernet_transport_open(struct uxrCustomTransport * transport) {
+    Ethernet.begin(mac, teensy_ip);
+    delay(500);
+    return udp.begin(teensy_port);
+}
+
+bool ethernet_transport_close(struct uxrCustomTransport * transport) {
+    udp.stop();
+    return true;
+}
+
+size_t ethernet_transport_write(struct uxrCustomTransport * transport,
+    const uint8_t * buf, size_t len, uint8_t * err) {
+    udp.beginPacket(agent_ip, agent_port);
+    size_t sent = udp.write(buf, len);
+    udp.endPacket();
+    return sent;
+}
+
+size_t ethernet_transport_read(struct uxrCustomTransport * transport,
+    uint8_t * buf, size_t len, int timeout, uint8_t * err) {
+    uint32_t start = millis();
+    while (millis() - start < (uint32_t)timeout) {
+        int psize = udp.parsePacket();
+        if (psize > 0) {
+            return udp.read(buf, len);
+        }
+    }
+    return 0;
+}
+
+// Micro-ROS objects
 rcl_publisher_t joint_state_publisher;
 rcl_subscription_t cmd_vel_subscriber;
 sensor_msgs__msg__JointState joint_state_msg;
@@ -18,7 +62,6 @@ rcl_timer_t timer;
 
 float axis_positions[3] = {0.0, 0.0, 0.0};
 float axis_velocities[3] = {0.0, 0.0, 0.0};
-
 static double positions[3] = {0.0, 0.0, 0.0};
 static double velocities[3] = {0.0, 0.0, 0.0};
 static float cmd_data[3] = {0.0, 0.0, 0.0};
@@ -34,15 +77,10 @@ void blink_slow() {
     digitalWrite(LED_PIN, LOW);  delay(500);
 }
 
-void blink_fast() {
-    digitalWrite(LED_PIN, HIGH); delay(100);
-    digitalWrite(LED_PIN, LOW);  delay(100);
-}
-
 void cmd_vel_callback(const void * msgin) {
     const std_msgs__msg__Float32MultiArray * msg =
         (const std_msgs__msg__Float32MultiArray *)msgin;
-    if(msg->data.size >= 3) {
+    if (msg->data.size >= 3) {
         axis_velocities[0] = msg->data.data[0];
         axis_velocities[1] = msg->data.data[1];
         axis_velocities[2] = msg->data.data[2];
@@ -111,8 +149,15 @@ void destroy_entities() {
 
 void setup() {
     pinMode(LED_PIN, OUTPUT);
-    Serial.begin(115200);
-    set_microros_serial_transports(Serial);
+    rmw_uros_set_custom_transport(
+        false,
+        NULL,
+        ethernet_transport_open,
+        ethernet_transport_close,
+        ethernet_transport_write,
+        ethernet_transport_read
+    );
+    delay(2000);
 }
 
 void loop() {
