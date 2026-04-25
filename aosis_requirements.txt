@@ -1,1 +1,1 @@
--e git+ssh://git@github.com/manfredmoller/AOSIS.git@3d8c25ed7166224f3ce20bdc5d6f9f8c4f769ad6#egg=ros2_nanoowl&subdirectory=build/ros2_nanoowl
+-e git+ssh://git@github.com/manfredmoller/AOSIS.git@5b7134b0ae6f6c2e88966c67c29e115ef87d7a2d#egg=ros2_nanoowl&subdirectory=build/ros2_nanoowl

@@ -1,34 +1,23 @@
-# ROS 2 build artifacts
+# Build artifacts
 build/
 install/
 log/
-
-# Python
+.pio/
 __pycache__/
 *.pyc
-*.pyo
-
-# Environment / secrets
-.env
-*.key
-
-# Editor
-.vscode/
 *.swp
+.vscode/
 
-# Isaac ROS container config
-.isaac_ros_common-config
-src/isaac_ros_common/
+# TensorRT engines (large binaries, regenerable)
+*.engine
+
+# Upstream third-party repos (cloned, not modified)
+src/nanoowl/
+src/torch2trt/
+src/ROS2-NanoOWL/
 src/realsense-ros/
-src/isaac_ros_argus_camera/
-# Generated frame tree files
-*.gv
-# VS Code workspace
-*.code-workspace
-# PlatformIO build artifacts
-firmware/.pio/
-# Binary firmware files
-# Micro-ROS built artifacts
+src/isaac_ros_common/
 src/microros/
-# Micro-ROS built artifacts
-src/microros/
+
+# Workspace files
+isaac_ros-dev.code-workspace
