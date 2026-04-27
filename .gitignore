@@ -21,3 +21,28 @@ src/microros/
 
 # Workspace files
 isaac_ros-dev.code-workspace
+.devbackup.tar.gz
+
+# Firmware build artifacts
+firmware/build_log.txt
+firmware/.pio/
+*.bak
+*.broken
+
+# Firmware build artifacts
+firmware/build_log.txt
+firmware/.pio/
+*.bak
+*.broken
+
+# Firmware build artifacts
+firmware/build_log.txt
+firmware/.pio/
+*.bak
+*.broken
+
+# Firmware build artifacts
+firmware/build_log.txt
+firmware/.pio/
+*.bak
+*.broken
