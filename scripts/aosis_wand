@@ -1,0 +1,30 @@
+#!/bin/bash
+# AOSIS wand tracker — runs inside the dev container
+set -e
+
+NANOOWL_DIR=/workspaces/isaac_ros-dev/src/nanoowl
+DEMO_DIR=$NANOOWL_DIR/examples/tree_demo
+ENGINE=$NANOOWL_DIR/data/owl_image_encoder_patch32.engine
+
+if [ ! -f "$ENGINE" ]; then
+    echo "ERROR: TensorRT engine not found at $ENGINE"
+    exit 1
+fi
+
+if [ ! -e /dev/video0 ]; then
+    echo "ERROR: /dev/video0 not present"
+    exit 1
+fi
+
+cd "$DEMO_DIR"
+echo "Starting AOSIS wand tracker..."
+echo "Browser: http://localhost:7860/"
+echo "Prompt syntax: [a soldering wand]"
+echo ""
+
+PYTHONPATH="$NANOOWL_DIR" python3 tree_demo.py \
+    "$ENGINE" \
+    --camera 0 \
+    --resolution 3840x2160 \
+    --port 7860 \
+    --image_quality 80
