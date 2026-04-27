@@ -8,6 +8,7 @@ docker run -it --rm \
   --user admin \
   -v /mnt/nova_ssd/workspaces/isaac_ros-dev:/workspaces/isaac_ros-dev \
   -v /home/manfred/.ssh:/home/admin/.ssh:ro \
+  -v /mnt/nova_ssd/aosis_pip_local:/home/admin/.local \
   -v /dev:/dev \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   -e DISPLAY=$DISPLAY \
