@@ -1,0 +1,21 @@
+repositories:
+  src/nanoowl:
+    type: git
+    url: https://github.com/NVIDIA-AI-IOT/nanoowl.git
+    version: main
+  src/torch2trt:
+    type: git
+    url: https://github.com/NVIDIA-AI-IOT/torch2trt.git
+    version: master
+  src/ROS2-NanoOWL:
+    type: git
+    url: https://github.com/NVIDIA-AI-IOT/ROS2-NanoOWL.git
+    version: master
+  src/isaac_ros_common:
+    type: git
+    url: https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
+    version: v4.2-0
+  src/realsense-ros:
+    type: git
+    url: https://github.com/IntelRealSense/realsense-ros.git
+    version: 4.51.1
