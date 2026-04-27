@@ -1,0 +1,25 @@
+From 9f5c29e5727bb85938d9f17a45559614b2442d2b Mon Sep 17 00:00:00 2001
+From: manfredmoller <manfredsilicon@icloud.com>
+Date: Mon, 27 Apr 2026 22:01:53 +0000
+Subject: [PATCH 2/2] Add build artifacts and backups to gitignore
+
+---
+ .gitignore | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/.gitignore b/.gitignore
+index 7571833..8e43160 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -2,4 +2,6 @@ data
+ *.egg-info
+ *.pyc
+ charmap.json.gz
+-sandbox
+\ No newline at end of file
++sandboxbuild/
++*.bak
++*.whl
+-- 
+2.34.1
+

@@ -1,0 +1,68 @@
+From ca174b96a0c46706f15dfd0cc4bda2bf93f01d1f Mon Sep 17 00:00:00 2001
+From: manfredmoller <manfredsilicon@icloud.com>
+Date: Mon, 27 Apr 2026 22:01:20 +0000
+Subject: [PATCH 1/2] AOSIS: V4L2 backend, BUFFERSIZE=1, MJPEG capture,
+ fullscreen CSS
+
+---
+ examples/tree_demo/index.html   | 16 +++++++++++-----
+ examples/tree_demo/tree_demo.py |  4 +++-
+ 2 files changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/examples/tree_demo/index.html b/examples/tree_demo/index.html
+index bbd3aef..df11fb7 100644
+--- a/examples/tree_demo/index.html
++++ b/examples/tree_demo/index.html
+@@ -20,8 +20,11 @@
+ 
+     <style>
+ 
+-        body {
+-            width: 100%;
++	body {
++    	    margin: 0;
++    	    padding: 0;
++    	    background: #000;
++	    width: 100%;
+             height: 100%;
+         }
+ 
+@@ -46,8 +49,11 @@
+             margin-top: 16px;
+         }
+ 
+-        #camera_image {
+-            width: 640px;
++	#camera_image {
++    		width: 100vw;
++    		max-width: 100%;
++    		height: auto;
++    		display: block;
+         }
+ 
+     </style>
+@@ -109,4 +115,4 @@
+         <input id="prompt_input" type="text" placeholder="[a face [an eye, a nose]]"/>
+     </div>
+ </body>
+-</html>
+\ No newline at end of file
++</html>
+diff --git a/examples/tree_demo/tree_demo.py b/examples/tree_demo/tree_demo.py
+index 7a7fcb0..7fd77e3 100644
+--- a/examples/tree_demo/tree_demo.py
++++ b/examples/tree_demo/tree_demo.py
+@@ -122,7 +122,9 @@ if __name__ == "__main__":
+ 
+         logging.info("Opening camera.")
+ 
+-        camera = cv2.VideoCapture(CAMERA_DEVICE)
++        camera = cv2.VideoCapture(CAMERA_DEVICE, cv2.CAP_V4L2)
++        camera.set(cv2.CAP_PROP_BUFFERSIZE, 1)
++        camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+         camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+         camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+ 
+-- 
+2.34.1
+
